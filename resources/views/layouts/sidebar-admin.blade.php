@@ -358,8 +358,6 @@ aside.sidebar .sb-foot .logout-btn:hover {
       </div>
       المشاريع
     </a>
-
-
     <div class="sb-section">النظام</div>
 
     <a class="nav-item {{ $nav==='settings' ? 'active' : '' }}"

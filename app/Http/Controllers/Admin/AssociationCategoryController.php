@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AssociationCategory\StoreAssociationCategoryRequest;
+use App\Http\Requests\AssociationCategory\UpdateAssociationCategoryRequest;
 use App\Models\Association;
 use App\Models\AssociationCategory;
 use Illuminate\Http\Request;
@@ -40,18 +42,8 @@ class AssociationCategoryController extends Controller
      * POST /api/association-categories
      * Create a new category
      */
-    public function store(Request $request)
+    public function store(StoreAssociationCategoryRequest $request)
     {
-        $request->validate([
-            'name'        => 'required|string|max:100|unique:association_categories,name',
-            'icon'        => 'nullable|string|max:10',
-            'color'       => 'nullable|string|max:20',
-            'description' => 'nullable|string|max:255',
-        ], [
-            'name.required' => 'اسم التصنيف مطلوب',
-            'name.unique'   => 'هذا التصنيف موجود مسبقاً',
-        ]);
-
         $category = AssociationCategory::create([
             'name'        => $request->name,
             'icon'        => $request->icon  ?? '🏢',
@@ -71,19 +63,9 @@ class AssociationCategoryController extends Controller
      * PUT /api/association-categories/{id}
      * Update a category
      */
-    public function update(Request $request, $id)
+    public function update(UpdateAssociationCategoryRequest $request, $id)
     {
         $category = AssociationCategory::findOrFail($id);
-
-        $request->validate([
-            'name'        => 'required|string|max:100|unique:association_categories,name,' . $id,
-            'icon'        => 'nullable|string|max:10',
-            'color'       => 'nullable|string|max:20',
-            'description' => 'nullable|string|max:255',
-        ], [
-            'name.required' => 'اسم التصنيف مطلوب',
-            'name.unique'   => 'هذا التصنيف موجود مسبقاً',
-        ]);
 
         // If name changes, update all associations using the old name
         $oldName = $category->name;

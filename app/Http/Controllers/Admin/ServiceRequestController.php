@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ServiceRequest\UpdateServiceRequestStatusRequest;
 use App\Models\Notification;
 use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
@@ -76,12 +77,8 @@ class ServiceRequestController extends Controller
         return response()->json($requests);
     }
 
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(UpdateServiceRequestStatusRequest $request, $id)
     {
-        $request->validate([
-            'status' => 'required|string|in:pending,processing,approved,rejected',
-        ]);
-
         $sr = ServiceRequest::findOrFail($id);
         $newDbStatus = $this->toDbStatus($request->status);
         $sr->update(['status' => $newDbStatus]);

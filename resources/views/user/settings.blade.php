@@ -397,7 +397,7 @@
     try {
       const fd = new FormData();
       fd.append('avatar', file);
-      const res = await fetch('/api/settings/avatar', {
+      const res = await fetch('/api/user/settings/avatar', {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '' },
         body: fd,
@@ -424,7 +424,7 @@
     const msgs = { profile: 'تم حفظ بيانات الملف الشخصي', notifications: 'تم حفظ إعدادات الإشعارات', security: 'تم تحديث كلمة المرور بنجاح', appearance: 'تم حفظ إعدادات المظهر', language: 'تم تحديث اللغة والمنطقة الزمنية' };
     try {
       if (section === 'profile') {
-        const res = await fetch('/api/settings/profile', {
+        const res = await fetch('/api/user/settings/profile', {
           method: 'POST',
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '' },
           body: JSON.stringify({ full_name: document.getElementById('full-name')?.value || '', email: document.getElementById('email')?.value || '', phone: document.getElementById('phone')?.value || '', bio: document.getElementById('bio')?.value || '' }),
@@ -439,7 +439,7 @@
         showToast(data.message || msgs[section], 'success'); return;
       }
       if (section === 'security') {
-        const res = await fetch('/api/settings/password', {
+        const res = await fetch('/api/user/settings/password', {
           method: 'POST',
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '' },
           body: JSON.stringify({ new_password: document.getElementById('new-pass')?.value || '', confirm_password: document.getElementById('confirm-pass')?.value || '' }),

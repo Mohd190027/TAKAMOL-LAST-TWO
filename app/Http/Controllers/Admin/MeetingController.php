@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Meeting\StoreMeetingRequest;
+use App\Http\Requests\Meeting\UpdateMeetingRequest;
+use App\Http\Requests\Meeting\CancelMeetingRequest;
 use App\Models\Meeting;
 use App\Models\MeetingAgendaItem;
 use App\Models\Association;
@@ -11,7 +14,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Validation\Rule;
 
 class MeetingController extends Controller
 {
@@ -73,7 +75,6 @@ class MeetingController extends Controller
                     'location'     => $meeting->location,
                     'location_url' => $meeting->location_url,
                     'notes'        => $meeting->notes,
-                    'duration'     => $meeting->duration_minutes,
                     'invitation'   => $meeting->invitation_direction,
                     'agendaItems'  => $meeting->agendaItems->map(fn($a) => [
                         'id'        => $a->id,
@@ -236,9 +237,9 @@ class MeetingController extends Controller
     /**
      * POST /meetings  — Create a new meeting
      */
-    public function store(Request $request)
+    public function store(StoreMeetingRequest $request)
     {
-        $validated = $request->validate($this->rules());
+        $validated = $request->validated();
 
         $meeting = new Meeting($this->buildPayload($validated, $request->user()?->id));
         $meeting->save();
@@ -292,9 +293,9 @@ class MeetingController extends Controller
     /**
      * PUT /meetings/{meeting}  — Update an existing meeting
      */
-    public function update(Request $request, Meeting $meeting)
+    public function update(UpdateMeetingRequest $request, Meeting $meeting)
     {
-        $validated = $request->validate($this->rules(true));
+        $validated = $request->validated();
         $meeting->update($this->buildPayload($validated, $meeting->created_by));
         $this->syncAgendaItems($meeting, $request->input('agenda_items', []));
 
@@ -381,11 +382,9 @@ class MeetingController extends Controller
     /**
      * POST /meetings/{meeting}/cancel  — Cancel a meeting
      */
-    public function cancel(Request $request, Meeting $meeting)
+    public function cancel(CancelMeetingRequest $request, Meeting $meeting)
     {
-        $validated = $request->validate([
-            'cancel_reason' => ['required', 'string', 'min:5', 'max:1000'],
-        ]);
+        $validated = $request->validated();
 
         $meeting->update([
             'status'        => 'cancelled',
@@ -433,34 +432,6 @@ class MeetingController extends Controller
     }
 
     // ─── Private helpers ────────────────────────────────────────────────
-
-    private function rules(bool $isUpdate = false): array
-    {
-        return [
-            'title'               => ['required', 'string', 'max:255'],
-            'category'            => ['required', 'string', 'max:100'],
-            'presenter'           => ['required', 'string', 'max:255'],
-            'date'                => ['required', 'date'],
-            'end_date'            => ['nullable', 'date', 'after_or_equal:date'],
-            'time'                => ['nullable', 'date_format:H:i'],
-            'end_time'            => ['nullable', 'date_format:H:i'],
-            'type'                => ['required', Rule::in(['online', 'onsite'])],
-            'invitation_direction'=> ['nullable', 'string', 'max:100'],
-            'link'                => ['nullable', 'url', 'max:1000'],
-            'location'            => ['nullable', 'string', 'max:255'],
-            'location_url'        => ['nullable', 'url', 'max:1000'],
-            'notes'               => ['nullable', 'string', 'max:5000'],
-            'status'              => [$isUpdate ? 'sometimes' : 'nullable', Rule::in(['upcoming', 'past', 'cancelled'])],
-            'report_summary'      => ['nullable', 'string', 'max:5000'],
-            'report_decisions'    => ['nullable', 'string', 'max:5000'],
-            'report_attendees'    => ['nullable', 'integer', 'min:0'],
-            'report_actions'      => ['nullable', 'string', 'max:5000'],
-            'agenda_items'        => ['nullable', 'array'],
-            'agenda_items.*.title'    => ['required', 'string', 'max:255'],
-            'agenda_items.*.duration' => ['nullable', 'integer', 'min:1'],
-            'agenda_items.*.presenter'=> ['nullable', 'string', 'max:255'],
-        ];
-    }
 
     private function syncAgendaItems(Meeting $meeting, array $items): void
     {

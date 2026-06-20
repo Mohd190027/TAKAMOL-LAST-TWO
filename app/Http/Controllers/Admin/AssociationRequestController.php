@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AssociationRequest\RejectAssociationRequest;
+use App\Http\Requests\AssociationRequest\RequestReviewRequest;
 use App\Models\Association;
-use App\Models\Notification;
-use App\Models\Role;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -42,13 +41,8 @@ class AssociationRequestController extends Controller
     }
 
     /** Reject a registration request */
-    public function reject(Request $request, $id)
+    public function reject(RejectAssociationRequest $request, $id)
     {
-        $request->validate(['notes' => 'required|string|min:5'], [
-            'notes.required' => 'يرجى إدخال سبب الرفض',
-            'notes.min'      => 'يجب أن يكون السبب 5 أحرف على الأقل',
-        ]);
-
         $assoc = Association::findOrFail($id);
         $assoc->update([
             'status'      => 'rejected',
@@ -60,13 +54,8 @@ class AssociationRequestController extends Controller
     }
 
     /** Request modification — send the association a message with required changes */
-    public function requestReview(Request $request, $id)
+    public function requestReview(RequestReviewRequest $request, $id)
     {
-        $request->validate(['notes' => 'required|string|min:5'], [
-            'notes.required' => 'يرجى إدخال ملاحظات التعديل المطلوبة',
-            'notes.min'      => 'يجب أن تكون الملاحظات 5 أحرف على الأقل',
-        ]);
-
         $assoc = Association::findOrFail($id);
         $assoc->update([
             'status'      => 'review',      // custom status: needs revision

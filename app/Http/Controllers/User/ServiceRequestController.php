@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ServiceRequest\StoreServiceRequestRequest;
+use App\Http\Requests\ServiceRequest\UpdateUserServiceRequestRequest;
 use App\Models\Notification;
 use App\Models\ServiceRequest;
 use App\Models\User;
@@ -78,16 +80,10 @@ class ServiceRequestController extends Controller
         return response()->json($requests);
     }
 
-    public function store(Request $request)
+    public function store(StoreServiceRequestRequest $request)
     {
         try {
-            $validated = $request->validate([
-                'service_type'   => 'required|string|in:units,training,initiatives,consulting,other',
-                'title'          => 'required|string|max:255',
-                'details'        => 'required|string',
-                'budget'         => 'nullable|numeric|min:0',
-                'preferred_date' => 'nullable|date',
-            ]);
+            $validated = $request->validated();
 
             [$userId, $associationId] = $this->resolveActorIds();
 
@@ -124,17 +120,12 @@ class ServiceRequestController extends Controller
             }
 
             return response()->json(['success' => true, 'message' => 'تم إرسال طلبك بنجاح']);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => collect($e->errors())->flatten()->first(),
-            ], 422);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'حدث خطأ: ' . $e->getMessage()], 500);
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateUserServiceRequestRequest $request, $id)
     {
         try {
             [$userId, $associationId] = $this->resolveActorIds();
@@ -150,13 +141,7 @@ class ServiceRequestController extends Controller
 
             $sr = $query->firstOrFail();
 
-            $validated = $request->validate([
-                'service_type'   => 'required|string|in:units,training,initiatives,consulting,other',
-                'title'          => 'required|string|max:255',
-                'details'        => 'required|string',
-                'budget'         => 'nullable|numeric|min:0',
-                'preferred_date' => 'nullable|date',
-            ]);
+            $validated = $request->validated();
 
             $sr->update([
                 'service_type'   => $validated['service_type'],

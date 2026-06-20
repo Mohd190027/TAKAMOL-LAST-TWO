@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\UploadAvatarRequest;
@@ -27,8 +27,8 @@ class SettingsController extends Controller
         $user->save();
 
         return response()->json([
-            'success' => true,
-            'message' => 'تم تحديث الصورة',
+            'success'    => true,
+            'message'    => 'تم تحديث الصورة',
             'avatar_url' => asset('storage/' . $path),
         ]);
     }
@@ -38,23 +38,23 @@ class SettingsController extends Controller
         $user = Auth::user();
         $validated = $request->validated();
 
-        $user->fill([
-            'full_name' => $validated['full_name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
-            'bio' => $validated['bio'] ?? null,
-        ]);
+        $user->full_name = $validated['full_name'];
+        $user->email     = $validated['email'];
+        $user->phone     = $validated['phone'] ?? null;
+        $user->bio       = $validated['bio']   ?? null;
         $user->save();
 
         return response()->json([
             'success' => true,
             'message' => 'تم حفظ بيانات الملف الشخصي',
-            'user' => [
-                'full_name' => $user->full_name,
-                'email' => $user->email,
-                'phone' => $user->phone ?? null,
-                'bio' => $user->bio ?? null,
-                'avatar_url' => $user->avatar_path ? asset('storage/' . $user->avatar_path) : null,
+            'user'    => [
+                'full_name'  => $user->full_name,
+                'email'      => $user->email,
+                'phone'      => $user->phone ?? null,
+                'bio'        => $user->bio   ?? null,
+                'avatar_url' => $user->avatar_path
+                    ? asset('storage/' . $user->avatar_path)
+                    : null,
             ],
         ]);
     }

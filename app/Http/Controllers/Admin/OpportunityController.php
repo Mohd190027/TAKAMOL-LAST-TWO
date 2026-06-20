@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Opportunity\StoreOpportunityRequest;
+use App\Http\Requests\Opportunity\UpdateOpportunityRequest;
+use App\Http\Requests\Opportunity\RejectOpportunityRequestRequest;
 use App\Models\Opportunity;
 use App\Models\OpportunityRequest;
 use App\Models\Notification;
@@ -29,17 +32,8 @@ class OpportunityController extends Controller
     }
 
     /** Create a new volunteering opportunity */
-    public function store(Request $request)
+    public function store(StoreOpportunityRequest $request)
     {
-        $request->validate([
-            'title'        => 'required|string|max:255',
-            'type'         => 'required|string', // Category
-            'description'  => 'required|string',
-            'requirements' => 'nullable|string', // Org Name, City, Volunteers count, etc.
-            'deadline'     => 'nullable|date',
-            'direction'    => 'nullable|in:local,international,both',
-        ]);
-
         $admin = User::whereHas('role', fn($q) => $q->where('name', 'admin'))->first();
         $creatorId = is_numeric(Auth::id()) ? Auth::id() : ($admin ? $admin->id : 1);
 
@@ -57,18 +51,9 @@ class OpportunityController extends Controller
     }
 
     /** Update an existing volunteering opportunity */
-    public function update(Request $request, $id)
+    public function update(UpdateOpportunityRequest $request, $id)
     {
         $opportunity = Opportunity::findOrFail($id);
-
-        $request->validate([
-            'title'        => 'required|string|max:255',
-            'type'         => 'required|string', // Category
-            'description'  => 'required|string',
-            'requirements' => 'nullable|string', // Org Name, City, Volunteers count, etc.
-            'deadline'     => 'nullable|date',
-            'direction'    => 'nullable|in:local,international,both',
-        ]);
 
         $opportunity->update([
             'title'        => $request->title,
@@ -133,15 +118,8 @@ class OpportunityController extends Controller
     }
 
     /** Reject an opportunity request with a reason */
-    public function rejectRequest(Request $request, $id)
+    public function rejectRequest(RejectOpportunityRequestRequest $request, $id)
     {
-        $request->validate([
-            'notes' => 'required|string|min:5'
-        ], [
-            'notes.required' => 'يرجى إدخال سبب الرفض',
-            'notes.min'      => 'يجب أن يكون سبب الرفض 5 أحرف على الأقل',
-        ]);
-
         $req = OpportunityRequest::with('opportunity')->findOrFail($id);
         $req->update([
             'status' => 'rejected',
@@ -164,7 +142,7 @@ class OpportunityController extends Controller
             Notification::create([
                 'association_id' => $req->association_id,
                 'title'          => 'تم رفض طلب التطوع',
-                'body'           => "لقد تم رفض طلبك للفرصة التطوعية: {$req->opportunity->title}. السبب: {$req->notes}",
+                'body'         => "لقد تم رفض طلبك للفرصة التطوعية: {$req->opportunity->title}. السبب: {$req->notes}",
                 'type'           => 'opportunity_rejected',
                 'is_read'        => false,
                 'related_id'     => $req->opportunity_id,

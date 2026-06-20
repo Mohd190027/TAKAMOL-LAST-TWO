@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\JointProject\StoreJointProjectRequest;
+use App\Http\Requests\JointProject\UpdateJointProjectRequest;
 use App\Models\JointProject;
 use App\Models\JointProjectUpdate;
 use App\Models\AssociationCategory;
@@ -63,7 +65,7 @@ class JointProjectController extends Controller
     /**
      * POST /api/joint-projects
      */
-    public function store(Request $request)
+    public function store(StoreJointProjectRequest $request)
     {
         // Accept both Arabic and English status values
         $statusMap = [
@@ -76,21 +78,6 @@ class JointProjectController extends Controller
         if ($request->filled('status')) {
             $request->merge(['status' => $statusMap[$request->status] ?? $request->status]);
         }
-
-        $request->validate([
-            'name'        => 'required|string|max:255',
-            'category_id' => 'required|exists:association_categories,id',
-            'description' => 'required|string',
-            'status'      => 'nullable|in:planning,active,idea,completed,canceled',
-            'start_date'  => 'nullable|date',
-            'end_date'    => 'nullable|date|after_or_equal:start_date',
-        ], [
-            'name.required'        => 'اسم المشروع مطلوب',
-            'category_id.required' => 'التصنيف مطلوب',
-            'category_id.exists'   => 'التصنيف المحدد غير موجود',
-            'description.required' => 'وصف المشروع مطلوب',
-            'end_date.after_or_equal' => 'تاريخ النهاية يجب أن يكون بعد تاريخ البدء',
-        ]);
 
         // Grab the numeric ID of the active user (because Auth::id() here returns email)
         $adminId = Auth::user() ? Auth::user()->id : null;
@@ -121,7 +108,7 @@ class JointProjectController extends Controller
     /**
      * PUT /api/joint-projects/{id}
      */
-    public function update(Request $request, $id)
+    public function update(UpdateJointProjectRequest $request, $id)
     {
         $project = JointProject::findOrFail($id);
 
@@ -136,17 +123,6 @@ class JointProjectController extends Controller
         if ($request->filled('status')) {
             $request->merge(['status' => $statusMap[$request->status] ?? $request->status]);
         }
-
-        $request->validate([
-            'name'        => 'required|string|max:255',
-            'category_id' => 'nullable|exists:association_categories,id',
-            'description' => 'required|string',
-            'progress'    => 'nullable|integer|min:0|max:100',
-            'start_date'  => 'nullable|date',
-            'end_date'    => 'nullable|date',
-            'status'      => 'nullable|in:planning,active,idea,completed,canceled',
-            'update_note' => 'nullable|string|max:1000',
-        ]);
 
         $progress = $request->filled('progress') ? (int)$request->progress : $project->progress;
 

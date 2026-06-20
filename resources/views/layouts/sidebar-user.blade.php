@@ -360,22 +360,6 @@ aside.sidebar .sb-foot .logout-btn:hover {
       المشاريع
     </a>
 
-    <div class="sb-section">خدمات مبادرون</div>
-
-    <a href="{{ route('user.services') }}"
-       class="nav-item {{ $nav==='services' ? 'active' : '' }}"
-       id="nav-services">
-      <div class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-          <path d="M2 17l10 5 10-5"/>
-          <path d="M2 12l10 5 10-5"/>
-        </svg>
-      </div>
-      خدمات مبادرون
-    </a>
-
     <div class="sb-section">الحساب</div>
 
     <a href="{{ route('user.settings') }}"

@@ -26,8 +26,8 @@ class DatabaseSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'admin@tkamel.sa'],
             [
-                'role_id'       => $adminRole->id,
-                'full_name'     => 'مدير النظام',
+                'role_id' => $adminRole->id,
+                'full_name' => 'مدير النظام',
                 'password_hash' => Hash::make('Admin@1234'),
             ]
         );
@@ -36,8 +36,8 @@ class DatabaseSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'user@tkamel.sa'],
             [
-                'role_id'       => $userRole->id,
-                'full_name'     => 'مستخدم تجريبي',
+                'role_id' => $userRole->id,
+                'full_name' => 'مستخدم تجريبي',
                 'password_hash' => Hash::make('User@1234'),
             ]
         );
