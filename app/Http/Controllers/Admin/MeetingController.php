@@ -515,47 +515,66 @@ class MeetingController extends Controller
 
     private function syncPastMeetings(): void
     {
+        $hasEndDate = Schema::hasColumn('meetings', 'end_date');
+        $hasEndTime = Schema::hasColumn('meetings', 'end_time');
+
         Meeting::where(function ($q) {
                 $q->where('status', 'upcoming')->orWhereNull('status');
             })
-            ->where(function ($query) {
-                // If end_date is present, check against end_date and end_time
-                $query->where(function ($q1) {
-                    $q1->whereNotNull('end_date')
-                       ->where(function ($sub1) {
-                           $sub1->whereDate('end_date', '<', now()->toDateString())
-                                ->orWhere(function ($sub2) {
-                                    $sub2->whereDate('end_date', now()->toDateString())
-                                         ->whereNotNull('end_time')
-                                         ->where('end_time', '<', now()->format('H:i'));
-                                });
-                       });
-                })
-                // If end_date is NOT present but end_time IS present, use date and end_time
-                ->orWhere(function ($q2) {
-                    $q2->whereNull('end_date')
-                       ->whereNotNull('end_time')
-                       ->where(function ($sub1) {
-                           $sub1->whereDate('date', '<', now()->toDateString())
-                                ->orWhere(function ($sub2) {
-                                    $sub2->whereDate('date', now()->toDateString())
-                                         ->where('end_time', '<', now()->format('H:i'));
-                                });
-                       });
-                })
-                // If neither end_date nor end_time is present, fallback to date and time
-                ->orWhere(function ($q3) {
-                    $q3->whereNull('end_date')
-                       ->whereNull('end_time')
-                       ->where(function ($sub1) {
-                           $sub1->whereDate('date', '<', now()->toDateString())
-                                ->orWhere(function ($sub2) {
-                                    $sub2->whereDate('date', now()->toDateString())
-                                         ->whereNotNull('time')
-                                         ->where('time', '<', now()->format('H:i'));
-                                });
-                       });
-                });
+            ->where(function ($query) use ($hasEndDate, $hasEndTime) {
+                if ($hasEndDate) {
+                    $query->where(function ($q1) use ($hasEndTime) {
+                        $q1->whereNotNull('end_date')
+                           ->where(function ($sub1) use ($hasEndTime) {
+                               $sub1->whereDate('end_date', '<', now()->toDateString())
+                                    ->orWhere(function ($sub2) use ($hasEndTime) {
+                                        $sub2->whereDate('end_date', now()->toDateString());
+                                        if ($hasEndTime) {
+                                            $sub2->whereNotNull('end_time')
+                                                 ->where('end_time', '<', now()->format('H:i'));
+                                        }
+                                    });
+                           });
+                    });
+
+                    if ($hasEndTime) {
+                        $query->orWhere(function ($q2) {
+                            $q2->whereNull('end_date')
+                               ->whereNotNull('end_time')
+                               ->where(function ($sub1) {
+                                   $sub1->whereDate('date', '<', now()->toDateString())
+                                        ->orWhere(function ($sub2) {
+                                            $sub2->whereDate('date', now()->toDateString())
+                                                 ->where('end_time', '<', now()->format('H:i'));
+                                        });
+                               });
+                        });
+                    }
+
+                    $query->orWhere(function ($q3) use ($hasEndTime) {
+                        $q3->whereNull('end_date');
+                        if ($hasEndTime) {
+                            $q3->whereNull('end_time');
+                        }
+                        $q3->where(function ($sub1) {
+                            $sub1->whereDate('date', '<', now()->toDateString())
+                                 ->orWhere(function ($sub2) {
+                                     $sub2->whereDate('date', now()->toDateString())
+                                          ->whereNotNull('time')
+                                          ->where('time', '<', now()->format('H:i'));
+                                 });
+                        });
+                    });
+                } else {
+                    $query->where(function ($sub1) {
+                        $sub1->whereDate('date', '<', now()->toDateString())
+                             ->orWhere(function ($sub2) {
+                                 $sub2->whereDate('date', now()->toDateString())
+                                      ->whereNotNull('time')
+                                      ->where('time', '<', now()->format('H:i'));
+                             });
+                    });
+                }
             })
             ->update(['status' => 'past']);
 
